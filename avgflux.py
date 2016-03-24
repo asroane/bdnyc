@@ -26,19 +26,21 @@ dfspec:
 	Data frame of all bdnyc spectra gathered in an sql query call (see indices_oplot.py)
 
 '''
-
-
-
 def avgflux(startw, endw, dfspec,i):
-	avgflux   = -444
-	sigflux   = -444
-	numpixels = -444
+	db = BDdb.get_db('/users/brownscholar/desktop/bdnyc/bdnyc315.db')
+	dfspec=pd.DataFrame(data=db.query.execute("SELECT id, source_id, wavelength, wavelength_units, flux, flux_units, unc, snr, wavelength_order, regime, publication_id, obs_date, instrument_id, telescope_id, mode_id, airmass, filename, comment FROM spectra").fetchall(), columns=['id','source_id','wavelength','wavelength_units','flux','flux_units','unc','snr','wavelength_order','regime', 'publication_id','obs_date','instrument_id','telescope_id','mode_id','airmass','filename', 'comment'])
+
+#0.65,2.58,dfspec,4
+	#avgflux   = -444
+	#sigflux   = -444
+	#numpixels = -444
 	#lets replace zeroes with NaNs, to not mess up min and max conditions
 	dfspec['wavelength'][i][dfspec['wavelength'][i] == 0.0] = None	
 	if max(dfspec['wavelength'][i]) > startw and min(dfspec['wavelength'][i]) < endw: 
 	
 		b = dfspec['wavelength'][i][dfspec['wavelength'][i] >= startw]
 		pix_scale=b[0+1]-b[0]
+		#print b[0:2], pix_scale
 		a = dfspec['wavelength'][i][(dfspec['wavelength'][i]+pix_scale/2 >= startw) & (dfspec['wavelength'][i]-pix_scale/2 <= endw)]
 		wavelength = a
 		flux= dfspec['flux'][i][(dfspec['wavelength'][i]+pix_scale/2 >= startw) & (dfspec['wavelength'][i]-pix_scale/2 <= endw)]
@@ -94,6 +96,7 @@ def avgflux(startw, endw, dfspec,i):
 			#end npixels > 1
 		if num_pixels == 1:
 			frac = (endw-startw)/pix_scale
+			print frac, endw, startw, pix_scale
 			avgflux=frac*flux[0]
 			sigflux = frac*.1*flux[0]
 		
@@ -104,5 +107,7 @@ def avgflux(startw, endw, dfspec,i):
 		sigflux = -444
 		num_pixels = -444
 		
-	#print "avgflux: ",avgflux,"sigflux: ",sigflux,"num_pixels: ",num_pixels
+	print "avgflux: ",avgflux,"sigflux: ",sigflux,"num_pixels: ",num_pixels
+	#print frac1, frac2, sumflux, pixflux, avgflux, realpix
 	return[avgflux,sigflux,num_pixels]
+	
